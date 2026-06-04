@@ -27,7 +27,7 @@ Good for Socket.IO on a single instance.
 | Field | Value |
 |--------|--------|
 | **Root directory** | (leave empty — repo root) |
-| **Build command** | `npm run install:all && npm run build` |
+| **Build command** | `npm run build` |
 | **Start command** | `npm start` |
 | **Health check path** | `/api/health` |
 
@@ -35,11 +35,12 @@ Good for Socket.IO on a single instance.
 
 | Key | Value |
 |-----|--------|
-| `NODE_ENV` | `production` |
 | `OPENAI_API_KEY` | your OpenAI key |
-| `CLIENT_URL` | your public URL, e.g. `https://trivia-battle.onrender.com` |
+| `CLIENT_URL` | your public URL, e.g. `https://trivia-battle-dd26.onrender.com` |
 
    After the first deploy, copy the real URL Render gives you and set `CLIENT_URL` to that exact value (with `https://`).
+
+   Add `NODE_ENV=production` only if you use a **Start command** that needs it (this repo’s `npm start` sets it). Do **not** rely on `NODE_ENV=production` during the build step alone — it can skip `vite` unless dependencies are installed correctly.
 
 5. Deploy. Open your Render URL in the browser.
 
