@@ -275,6 +275,7 @@ export const useGameSocket = () => {
 
   const createRoom = useCallback((playerName, category, language, difficulty) => {
     clearError();
+    clearRoomSession();
     reconnectAttemptedRef.current = false;
     updateState({ playerName, chatMessages: [] });
     socketRef.current?.emit('createRoom', {

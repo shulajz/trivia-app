@@ -71,7 +71,7 @@ const completeReconnect = (io, socket, room, player) => {
   broadcastRoomUpdate(io, room.roomCode);
 };
 
-const tryReconnectPlayer = (socket, room, name) => {
+const tryReconnectPlayer = (io, socket, room, name) => {
   const disconnected = findDisconnectedPlayer(room, name);
   if (!disconnected) return false;
 
@@ -137,7 +137,7 @@ const handleJoinOrReconnect = (io, socket, { roomCode, playerName }) => {
     return;
   }
 
-  if (tryReconnectPlayer(socket, room, name)) {
+  if (tryReconnectPlayer(io, socket, room, name)) {
     return;
   }
 
