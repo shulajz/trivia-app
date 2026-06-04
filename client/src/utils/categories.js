@@ -1,0 +1,18 @@
+export const CATEGORIES = [
+  'Any Category',
+  'General Knowledge',
+  'Geography',
+  'History',
+  'Science',
+  'Technology',
+  'Sports',
+  'Movies',
+  'TV Shows',
+  'Music',
+  'Video Games',
+  'Food',
+  'Animals',
+  'Israel',
+  'Bible',
+  'Hebrew Slang',
+];
