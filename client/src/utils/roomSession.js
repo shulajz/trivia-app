@@ -4,7 +4,10 @@ export const saveRoomSession = (session) => {
   if (!session?.roomCode || !session?.playerName) return;
 
   try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ ...session, wasInRoom: true }),
+    );
   } catch {
     // Storage full or unavailable
   }

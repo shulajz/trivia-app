@@ -91,7 +91,10 @@ export const useGameSocket = () => {
 
     const attemptReconnect = () => {
       const session = loadRoomSession();
-      if (!session?.roomCode || !session?.playerName || reconnectAttemptedRef.current) {
+      if (reconnectAttemptedRef.current) return;
+
+      if (!session?.wasInRoom || !session?.roomCode || !session?.playerName) {
+        if (session?.roomCode) clearRoomSession();
         return;
       }
 
@@ -105,6 +108,12 @@ export const useGameSocket = () => {
     const onConnect = () => {
       updateState({ playerId: socket.id });
       attemptReconnect();
+    };
+
+    const onDisconnect = () => {
+      if (loadRoomSession()?.wasInRoom) {
+        reconnectAttemptedRef.current = false;
+      }
     };
 
     const onRoomCreated = (room) => {
@@ -218,12 +227,28 @@ export const useGameSocket = () => {
     };
 
     const onErrorMessage = ({ message }) => {
-      setState((prev) => ({
-        ...prev,
-        error: message,
-        isGenerating: false,
-        screen: prev.screen === 'loading' ? 'lobby' : prev.screen,
-      }));
+      const staleRoom =
+        message.includes('Room does not exist') ||
+        message.includes('already started');
+
+      if (staleRoom) {
+        clearRoomSession();
+        reconnectAttemptedRef.current = true;
+      }
+
+      setState((prev) => {
+        const isSetupScreen = ['home', 'create', 'join'].includes(prev.screen);
+        if (staleRoom && isSetupScreen) {
+          return { ...prev, error: null, isGenerating: false };
+        }
+
+        return {
+          ...prev,
+          error: message,
+          isGenerating: false,
+          screen: prev.screen === 'loading' ? 'lobby' : prev.screen,
+        };
+      });
     };
 
     const onGameGenerationFailed = ({ message }) => {
@@ -236,6 +261,7 @@ export const useGameSocket = () => {
     };
 
     socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
     socket.on('roomCreated', onRoomCreated);
     socket.on('playerJoined', onPlayerJoined);
     socket.on('playerReconnected', onPlayerReconnected);
@@ -257,6 +283,7 @@ export const useGameSocket = () => {
 
     return () => {
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
       socket.off('roomCreated', onRoomCreated);
       socket.off('playerJoined', onPlayerJoined);
       socket.off('playerReconnected', onPlayerReconnected);
@@ -276,7 +303,7 @@ export const useGameSocket = () => {
   const createRoom = useCallback((playerName, category, language, difficulty) => {
     clearError();
     clearRoomSession();
-    reconnectAttemptedRef.current = false;
+    reconnectAttemptedRef.current = true;
     updateState({ playerName, chatMessages: [] });
     socketRef.current?.emit('createRoom', {
       playerName,
@@ -288,7 +315,7 @@ export const useGameSocket = () => {
 
   const joinRoom = useCallback((roomCode, playerName) => {
     clearError();
-    reconnectAttemptedRef.current = false;
+    reconnectAttemptedRef.current = true;
     updateState({ playerName });
     socketRef.current?.emit('joinRoom', { roomCode, playerName });
   }, [clearError, updateState]);
@@ -314,6 +341,10 @@ export const useGameSocket = () => {
   }, []);
 
   const goToScreen = useCallback((screen) => {
+    if (['home', 'create', 'join'].includes(screen)) {
+      clearRoomSession();
+      reconnectAttemptedRef.current = true;
+    }
     updateState({ screen, error: null });
   }, [updateState]);
 
